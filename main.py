@@ -3,9 +3,10 @@ import hashlib
 from getpass import getpass
 from print_func import draw_window
 from input_utils import get_formatted_input_xy, get_formatted_input
-from user_utils import maintain_users  # search, sign_in_menu
+from user_utils import maintain_users, sign_in
 from officer_utils import maintain_officers
 from card_utils import hash_card_id
+import vlc  # type: ignore
 
 
 def main():
@@ -17,7 +18,7 @@ def main():
             cardID = get_formatted_input_xy("Please swipe your card: ", 3, 7)
         except KeyboardInterrupt:
             print("Exiting...")
-            exit(1)
+            exit(0)
         # Connect to the database
         # Get username and password
         password = getpass("| Please enter your password: ")
@@ -40,6 +41,8 @@ def main():
         # Get the card ID from the user, remove extra chars from the string
         cardID = hash_card_id(''.join([x for x in cardID if x.isdigit()]))
 
+        p = vlc.MediaPlayer("./mixkit-positive-interface-beep-221.mp3")
+        p.play()
         data = conn.get_officer_data(cardID)
         if len(data) == 0:
             print("User not found or user not an officer!")
@@ -63,8 +66,8 @@ def main_loop(conn: db_conn.conn, data: list) -> int:
                         maintain_officers(conn, data)
                     # case '3':
                     #     search(conn, data)
-                    # case '4':
-                    #     sign_in_menu(conn, data)
+                    case '4':
+                        sign_in(conn, data)
                     case '0':
                         return 0
 

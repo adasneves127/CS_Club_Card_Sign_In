@@ -13,10 +13,10 @@ class conn:
         self.cursor = self.db.cursor()
 
     def create_card(self,
-                    cardID: int,
+                    cardID: str,
                     first_name: str,
                     lastName: str,
-                    bannerID: int,
+                    bannerID: str,
                     emailID: str,
                     addedBy: str):
         """Create a new User in the database"""
@@ -27,7 +27,7 @@ class conn:
         self.db.commit()
         return self.cursor.rowcount
 
-    def get_card_data(self, cardID: int):
+    def get_card_data(self, cardID: str):
         """Get the card data from the database"""
         query = "SELECT * FROM members WHERE cardID = %s"
         values = (cardID,)
@@ -76,17 +76,21 @@ class conn:
         if not self.is_card_officer(addedBy):
             raise Exception("Only officers can appoint other officers!")
         # Get roles from database
-        roles: List[str] = []
-        if role not in roles:
+        role_query = "SELECT roleName from roles"
+        self.cursor.execute(role_query)
+        roles: List[str] = self.cursor.fetchall()  # type: ignore
+        print(roles)
+        if role.lower() not in [x[0].lower() for x in roles]:
             raise Exception("Invalid role!")
 
         # Check that our authority is greater than the person we are appointing
         query = "SELECT role FROM officers WHERE memberID = %s"
         select_values = (addedBy,)
         self.cursor.execute(query, select_values)
-        our_role = int(self.cursor.fetchall()[0][0])
-        target_role = roles.index(role)
-        if our_role >= target_role:
+        role_results = self.cursor.fetchall()[0]
+        our_role = int(role_results[0])  # type: ignore
+        target_role = [x[0].lower() for x in roles].index(role.lower()) + 1
+        if our_role > target_role:
             raise Exception(
                 f"""You do not have permission to appoint this role!
     Your authority level: {our_role}, Target authority level: {target_role}""")
@@ -94,7 +98,7 @@ class conn:
         query = """INSERT INTO officers
         (memberID, role, isActive, addedBy)
         VALUES (%s, %s, %s, %s)"""
-        values = (cardID, role, 'yes', addedBy)
+        values = (cardID, target_role, 'yes', addedBy)
         self.cursor.execute(query, values)
         self.db.commit()
         return self.cursor.rowcount
@@ -109,7 +113,7 @@ class conn:
         self.cursor.execute(query, values)
         return self.cursor.fetchall()
 
-    def sign_in(self, cardID: int):
+    def sign_in(self, cardID: str):
         """Sign in a member"""
         query = "INSERT INTO sign_in (memberID) VALUES (%s)"
         values = (cardID,)
@@ -148,6 +152,25 @@ class conn:
     def update_user(self, card_id, col, data):
         query = f"UPDATE members SET `{col}`" + "= %s WHERE cardID = %s"
         values = (data, card_id)
+        self.cursor.execute(query, values)
+        self.db.commit()
+
+    def create_acct(self, username: str, password: str):
+        query = f"CREATE USER '{username}'@'%'" + \
+            " IDENTIFIED WITH mysql_native_password BY '{password}'"
+        self.cursor.execute(query)
+        self.cursor.execute(f"GRANT DefaultUser to {username}")
+        self.db.commit()
+
+    def remove_officer(self, cardID: str):
+        query = "UPDATE officers SET isActive = 'no' WHERE memberID = %s"
+        values = (cardID,)
+        self.cursor.execute(query, values)
+        self.db.commit()
+
+    def remove_acct(self, username: str):
+        query = "DROP USER %s"
+        values = (username,)
         self.cursor.execute(query, values)
         self.db.commit()
 

@@ -159,7 +159,8 @@ class conn:
         query = f"CREATE USER '{username}'@'%'" + \
             " IDENTIFIED WITH mysql_native_password BY '{password}'"
         self.cursor.execute(query)
-        self.cursor.execute(f"GRANT DefaultUser to {username}")
+        self.cursor.execute(f"""GRANT DefaultUser to {username}
+                            WITH GRANT OPTION""")
         self.db.commit()
 
     def remove_officer(self, cardID: str):

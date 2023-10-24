@@ -1,0 +1,4 @@
+.Heading {
+    text-style: bold;
+    text-align: center;
+}

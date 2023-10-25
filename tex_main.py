@@ -7,6 +7,7 @@ from db_conn import conn
 import mysql.connector.errors as sqlErrors
 
 
+
 class UserNotFound(Screen):
     BINDINGS = [("escape", "app.pop_screen", "Pop screen"), 
                 ("enter", "app.pop_screen", "Pop Screen")]
@@ -41,6 +42,7 @@ class CS_Sign_In(App):
     def compose(self) -> ComposeResult:
         # Add a header
         yield widgets.Header(show_clock=True)
+        with reactive()
         with widgets.TabbedContent(
                                 "Log In" if self.db is None
                                 else "Maintain Users"):
@@ -75,10 +77,9 @@ class CS_Sign_In(App):
                                 username,
                                 password)
                 self.cur = self.db.cursor
-                self.
             except sqlErrors.ProgrammingError:
                 self.push_screen(UserNotFound())
-                
+            self.app.refresh(layout=True)
 
 if __name__ == "__main__":
     CS_Sign_In().run()

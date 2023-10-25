@@ -40,7 +40,7 @@ class conn:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def get_officer_data(self, cardID: int):
+    def get_officer_data(self, cardID: str):
         """Get the card data from the database"""
         query = """SELECT
         a.memberID, b.firstName, b.lastName, b.emailID, c.roleName
